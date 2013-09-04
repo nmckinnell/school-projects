@@ -1,0 +1,154 @@
+<html lang='en'>
+<head>
+<meta charset="utf-8">
+<title>Wellesley Coursewire: Final Paper</title>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+<h2>Wellesley Coursewire</h2>
+<small style="position: absolute; margin-top: -10px;">Created by <a href="mailto:nmckinne@wellesley.edu">Nora McKinnell</a> for <a href="/~cs304/">CS 304</a> taken as an independent study in Spring 2013, advised by Prof. Scott Anderson</small><br>
+<h4>Overview</h4>
+<p>Students know that registration can be one of the most stressful times in the semester. Although the actual process of registering takes only a matter of minutes, the preparation process can take hours. Students must take into account many different factors when considering a course and must balance personal interest with distribution and major requirements. Beyond the annual course catalog, there are few resources to aid in this decision process. Coursewire was created to fill the need for a comprehensive registration tool for Wellesley students.</p>
+<h5>Implementation</h5>
+<p>Wellesley Coursewire was created in PHP with a MySQL database using course information given to <a href="/~cs349a/">CS 349a</a> students by the Registrar in Spring 2012. It was built with <a href="http://twitter.github.io/bootstrap/">Bootstrap</a> using a premade theme from <a href="http://bootswatch.com/">Bootswatch</a>.</p>
+<h5>Terminology</h5>
+<p>Much of the terminology used in this paper are taken from the information given by the Registrar's Office. The ones you will see most frequently in this paper are as follows.</p>
+<dl class="dl-horizontal">
+  <dt>Course name</dt>
+  <dd>How a course is referenced beyond its title. A composition of it's subject code (department) and course number.<br><small>e.g. CS 304 is the course name for Databases with Web Interfaces in the Computer Science department</small></dd>
+  <dt>Term code</dt>
+  <dd>A college term or semester. It is a 6 digit number composed of a 4 digit year and a 2 digit month (09 for fall, 02 for spring).<br><small>e.g. 201302 would refer to the Spring 2013 semester</small></dd>
+  <dt>CRN</dt>
+  <dd>A unique 5 digit course reference number.</dd>
+</dl>
+<h4>Database</h4>
+The database is organized into four tables. Each table is created by its own sql file and if applicable, inserts the appropriate historical data from a csv file.
+<ol>
+<li><h5>students</h5>
+<p>Created by <b>sql/students-table.sql</b><br><br>
+This table has one row per user with the user's student_id (username), name, grad_year (class year), major1 (first major), major2 (second major or minor). It has an additional column is_user to indicate whether the entry is for a real user or historical data. Information for graduated students is loaded into the table from graduated-students.csv to be used as historical data for generating recommendations.</p></li>
+<li><h5>courses</h5>
+<p>Created by <b>sql/courses-table.sql</b><br><br>
+This table contains all relevant information for each course. Each course is identified by its term code and CRN. This information is loaded from a csv file called courses.csv, which contains all course information for the 2011-2012 school year. After the information is loaded into the tables, new columns are created with the start and end times of each meeting of the given course in Date format to allow for future sorting. The file containing this information was given by the Registrar. Currently there is no way of automatically obtaining this information.</p></li>
+<li><h5>classes</h5>
+<p>Created by <b>sql/classes-table.sql</b><br><br>
+Each course taken by a student has its own row in this table. Each row has the student's id, subject code and course number. The subject code and course number are used as keys instead of a CRN as it is irrelevant if a student takes the same class more than once. This table also has columns for additional information about the course such as CRN, course title, and instructors. Historical data from graduated students is loaded into this table from classes.csv. There is also a trigger before every new insert to attempt to automatically add the course's title if there is only one title listed for all courses with the same subject code and course number.</p></li>
+<li><h5>classes_shopped</h5>
+<p>Created by <b>sql/classes-shopped-table.sql</b><br><br>
+Each course shopped by the user has its own row in this table. This table only has the necessary columns to track the user and the course. The user is identified by their student id (username) and the course is identified by its term code and CRN.</p>
+<p></p></li>
+</ol>
+<h4>User Sign in and Settings</h4>
+<p>In order to provide individual recommendations and keep track of each student's courses, we need each student to sign in with his/her individual account. As Coursewire is aimed toward Wellesley students, students can sign in using their Wellesley domain account. We have no access to student records, we require students to provide their own information about majors, minors, courses taken and other factors that could affect their recommendations.</p>
+<h5>User Guide</h5>
+To sign in, all you need to do is click on "Sign in" on the navigation bar to be redirected to a Wellesley log in page. Use your Wellesley domain account to log in and you will be redirected back to the page you were previously viewing. You can now see your recommendations on your dashboard and make use of the planner. To add personal information for better recommendations, click where it says "Hello, [your username]" to edit your profile and provide information about your course history.
+<h5>Technical Details</h5>
+Files used:
+<ul>
+<li>cas-login.php</li>
+<li>header.php</li>
+<li>settings.php
+  <ul>
+  <li>profile.php</li>
+    <ul>
+    <li>edit-profile.php</li>
+    </ul>
+  <li>course-history.php</li>
+    <ul>
+    <li>get-courses-taken.php</li>
+    <li>add-course.php</li>
+    <li>remove-course.php</li>
+    </ul>
+  <li>shopped-courses.php</li>
+    <ul>
+    <li>get-courses-shopped.php</li>
+    <li>remove-shopped-course.php</li>
+    </ul>
+  </ul>
+</li>
+</ul>
+<p>Instead of creating our own login system, we are using Wellesley's <abbr title="Central Authority System">CAS</abbr> to allow students to log in with their Wellesley domain account. The setup for this process is in <b>cas-login.php</b>, which was originally created by Prof. Scott Anderson for Tandora. When a user clicks on "Log in" they are redirected to Wellesley's server for authentication. Once they submit their credentials, they are redirected back to our site and their username is given in a session variable. With that information, we create another session variable to indicate that a user is logged in. To log out, a user clicks on the "Log out" link and the session is destroyed.</p>
+<p>Once a user is logged in, <b>header.php</b> queries the database for the user's name and major(s) to establish the session variables used to display the user's name (or username if no name is set) in the navigation bar and to create the recommendations in <b>index.php</b>. Once this check is performed, it sets a $checked variable so as to not perform the check on each page load.</p>
+<p>User settings are held in three different pages: user profile, course history, and shopped courses. Each of these pages is dynamically loaded into <b>settings.php</b> when its respective link is clicked on the sidebar.
+<ul>
+<li><b>profile.php</b> is a straight-forward form containing the user's name, class year, and major(s)/minor. When this page is loaded, it prefills the form with the user's existing data. If there is no entry for the user, it creates one with the username. This page calls <b>edit-profile.php</b> to update the table with any new data.</li>
+<li><b>course-history.php</b> has a form to add new courses to the classes table and displays all courses for the user that are currently in the table by calling <b>get-courses-taken.php</b>. When submitting a new course, the field is validated to confirm that there is a space between the subject code and the course number and that the course is not already listed. The course name is then submitted to <b>add-course.php</b> which does an insert to the classes table. Clicking the remove link next to any of the listed courses calls <b>remove-course.php</b> with the id of the course (a composite of the subject code and course number) and removes it from the classes table.</li>
+<li><b>shopped-courses.php</b> is nearly identical in its process except it calls <b>get-shopped-courses.php</b> to create the list of courses shopped by the user and a link to remove the course. Unlike <b>course-history.php</b>, it does not have a form to add new shopped courses. The reasoning behind this is that adding a shopped course requires a term code in addition to the CRN. A quick add feature for courses may be implemented in the future.
+</ul></p>
+<h4>Search</h4>
+<p>Although there is an existing solution in the Wellesley course browser, you will find that it is not complete. It allows the user to search by selecting a semester, department, subject, and/or distribution requirement. What if you wanted to search by a specific term, a certain professor, or when it is offered during the week? Coursewire's search allows for all of those things. You are able to search courses by what you're really looking for instead of wasting time perusing the course catalog in search of this information.</p>
+<h5>User Guide</h5>
+<p>Searching for a course is easy. There are many things you can search by, but none of them are required. All you have to do is fill out the form and hit Search and your results will show up to the right of the form. To view previous searches you have made, a list of the past 5 searches are listed under "Search History" below the form. If you see a course you want to know more about, just click on "More Info" to see the course details. From there, you can view the official details by clicking on "View Official Details". If there are other sections of the same course available, they will be listed with a link to view their details. To go back to your search results, click "Back to Search".</p>
+<h5>Technical Details</h5>
+Files used:
+<ul>
+<li>search.php</li>
+<li>search-helper.php</li>
+<li>get-details.php</li>
+</ul>
+<p>The majority of the workload for search is handled in <b>search.php</b> using many helper functions found in <b>search-helper.php</b>. When there are no GET terms in the URL, only the search form is displayed. If there are, indicating that someone has performed a search, the form is prefilled with that information and the terms are used to construct a query against the courses table in the database. The results are then formatted and displayed underneath the result count and the given search terms.</p>
+<p>There were some choices I had to make regarding the form and the query it generates.
+<ul>
+<li>I opted to include a dropdown for Department/Subject even though one is able to use the Course Number field to search for all courses within a department (e.g. CS *). They are put together with AND to allow both fields to be used at once. That way, if I specify Computer Science as the Department in the dropdown and have "CS 2*" in the Course Number field, it will only show 200-level CS courses. If the fields are different, there will be no results.</li>
+<li>When searching for a class by time range, it only searches for courses that are in that range for Days1. This allows classes to show up even if they are offered at another day at an alternate time. This was done due to the time discrepancies in courses offered on Wednesday afternoon. A course normally held from 1:30 pm to 2:40 pm on any other day will be held at 2:15 pm to 3:25 pm on Wednesday. As someone might consider a class with a Wednesday section held at a different time, I did not want to exclude it as it still could possibly be a viable class option.</li>
+<li>Search by Days shows every class that meets on the selected days. This is done by checking if each of the selected days shows up in the concatenation of the three possible days columns (days1, days2, days3). Each of these columns contains the days the course meets on. If there are different meeting times for different days, they will show up separately in days1 and days2 if there are two different meeting times, or in days1, days2 and days3 if there are three different meeting times for the same course. Tuesday 'T' has a slightly different process when selected as it requires a regular expression to avoid also matching Thursday 'Th'. Using this process, all courses that meet on all of the selected days will appear. This is not a strict check so it will also show courses that meet on other days in addition to the selected days.</li>
+<li>Timeslot only checks against the startend1 column for the same reasoning described for time ranges. As it checks for a perfect match, it will override the results from the Times fields and only show classes with in the given timeslot.</li>
+<li>Distributions are searched for using OR. As few courses fulfill multiple distributions, I opted to have multiple selections show classes that fulfill any of the distribution requirements. Lab is the only special case as it is not listed in any of the distribution columns in the database, therefore it is searched as an additional clause. As there is no other way to find courses with lab, it simply finds classes that have 'with Lab' in the course title.</li>
+</ul></p>
+<p>Before the form is submitted, unused fields are removed from the GET request to prevent them from being shown in the URL. If the "Course Number" field is not empty, it is checked for a space between the subject code and the course number. If there is no space, it complains. The reasoning behind this is to allow the use of wildcards. The space is necessary to properly parse the subject code and the course number. After the form is submitted, it is stored in the session to be used to prefill the form. Once another search is submitted, this query will then be added to the session variable for past queries, which is used to display the search history below the search form.</p>
+<p>Each course result also includes a link for "More Info". Clicking on this calls <b>get-details.php</b>, which uses the course's CRN to query the courses table for the full course information. Other sections of the same course are also listed if they exist by querying the courses table for other courses with the same term code and course name and a different CRN. If logged in, there will also be an option to shop or stop shopping the course that is involved with using the planner.</p>
+<h4>Recommendations</h4>
+<p>Sometimes it's hard to choose what course you should take. Many people rely on other student's opinions to make a final decision. For the past four years, there has not been a way to get this kind of information beyond asking friends and acquaintances. What if you could find out what classes other students have taken? Now you can.</p>
+<h5>User Guide</h5>
+<p>To receive recommendations, you need to be logged in. Once you are logged in, you will be able to see the 10 most popular courses taken at Wellesley that you haven't taken yet. To be able to view the 10 most popular courses taken by students with your major, you will need to go to your Settings page and add your major(s). To stop courses you have already taken from showing up in your recommendations, you need to add them under "Course history" in your Settings page. All you need to do is enter the course name with a space in between the subject code and the course number and press Add for it to automatically be listed in your course history. If you want to remove any of these courses, just click on the "Remove" link next to the course title.</p>
+<h5>Technical Details</h5>
+Files used:
+<ul>
+<li>index.php</li>
+<li>header.php</li>
+<li>profile.php</li>
+  <ul>
+  <li>edit-profile.php</li>
+  </ul>
+<li>course-history.php</li>
+  <ul>
+  <li>add-course.php</li>
+  <li>remove-course.php</li>
+  </ul>
+</ul>
+<p>What is seen on the dashboard (or <b>index.php</b>) depends on whether someone is logged in. If nobody is logged in, a marketing page explaining the benefits of using Coursewire and its features are displayed. If someone is logged in, it displays course recommendations.</p>
+<p>Course recommendations are generated in <b>index.php</b>. By default it displays only the most popular courses by querying the database for the top 10 most prevalent courses in the classes table. Whether major recommendations are shown depends on whether the user has set a major. In <b>header.php</b>, when a user logs in the first time a query is ran to grab the user's name and major(s). If one is found, it adds it to the session. This also happens when someone has filled out a major in their profile. After the query is completed in <b>edit-profile.php</b>, the major(s) are added as a session variable. This allows <b>index.php</b> to check if a student has selected a major without having to query the database a second time. If the session variable for major is set, the same process of querying the database is followed but with an additional join specifying only classes taken by students currently listed with that major. Both queries only show courses not already taken by the user, that is, it will only show courses that the user has not added in their course history settings.</p>
+<h4>Planner</h4>
+<p>Students always plan out their schedules prior to registration, but there is no easy way to quickly visualize potential schedules. Banner Self-Service provides a schedule only once you are registered for a course. The Registrar provides a Word document students can fill out. Coursewire's scheduling tool allows students to quickly and effortlessly notice any conflicts and analyze their prospective schedule.</p>
+<h5>User Guide</h5>
+<p>To use the planner, you first need to be logged in and <abbr title="mark as a prospective course to take">shop</abbr> a course. You can do this by viewing a course's detail and clicking on "Shop this course". Once you have added a course, it will show up on the planner page when its term is selected on the dropdown menu. All shopped courses for the selected term will be listed with a checkbox. You can uncheck the box next to the course name to stop the course from being shown on the calendar and check the box to have it be shown again. You can also click on any of the course's events on the calendar to display its details. To stop shopping a course, you can click "Stop shopping this course" when viewing its details or remove it in your settings.</p>
+<h5>Technical Details</h5>
+Files used:
+<ul>
+<li>planner.php</li>
+  <ul>
+  <li>get-planner-courses.php</li>
+  <li>get-details.php</li>
+    <ul>
+    <li>add-shopped-course.php</li>
+    <li>remove-shopped-course.php</li>
+    </ul>
+  </ul>
+<li>shopped-courses.php</li>
+  <ul>
+  <li>get-courses-shopped.php</li>
+  <li>remove-shopped-course.php</li>
+  </ul>
+</ul>
+<p>Shopping a course is a simple process. Each course's detail page has a link to shop or stop shopping a course depending on its current status. This link has a javascript function associated with it. When the link is created in the the detail page, it is given the course's term code and CRN as a parameter. If the link to shop a course is clicked, it calls the appropriate file (<b>add-shopped-course.php</b> to add the course or <b>remove-shopped-course.php</b> to remove it) and gives it the course's term code and CRN. The course is then added or removed from the user's shopped courses with a MySQL query. All currently shopped courses are displayed by <b>shopped-courses.php</b>. This file uses <b>get-courses-shopped.php</b> to query the database for courses shopped by the user in the courses_shopped table and then formats them and returns them to be displayed on the page. Each course is listed with a remove link next to its title. When clicked, this calls <b>remove-shopped-course.php</b> and follows the same process described about for adding a shopped course.</p>
+<p>Shopped courses are listed in <b>planner.php</b> differently than they are in the settings page as they require a checkbox to toggle their display on the calendar. To display currently shopped courses, <b>planner.php</b> calls <b>get-planner-courses.php</b>, which returns a list of formatted courses with their respective courses along with the course data to be used when creating the calendar events. As part of preparing the course data, it creates individual arrays with information for each course meeting to be used when creating events for the calendar.</p>
+<p>The calendar is created using <a href="http://arshaw.com/fullcalendar/">FullCalendar</a>, an open source jQuery plugin developed by Adam Shaw. It is displayed along with the list of shopped courses in <b>planner.php</b>. All shopped courses for the selected term are shown by default. This is done by using the course data provided by <b>get-planner-courses.php</b> to create <a href="http://arshaw.com/fullcalendar/docs/event_data/Event_Source_Object/">Event Source objects</a> for each individual course. These source objects are then stored in a global Javascript object. When a checkbox is unchecked, it removes the appropriate Event Source object by using the checkbox's id. If it is checked, it then re-adds the object by getting it from the stored data. Clicking on an event in the calendar shows a modal with the details for that course by using the event's id to call <b>get-details.php</b>. If the dropdown menu is changed to another term, all Event Sources are removed and the calendar and global object containing them is repopulated by calling <b>get-planner-courses.php</b> again with the new term code.</p>
+<h4>Conclusion</h4>
+<p>Coursewire is a tool to allow students to explore Wellesley's course offerings and provide an easier way to plan course schedules.</p>
+<p>The advanced search tool provides many different ways to search for classes. Although Wellesley does offer a course browser in addition to the course catalog, its search options are limited and still requires students to know something about the course before they are able to find it in the course listings. Coursewire allows students to search by all possible fields, which leads to an easier and more useful course shopping experience.</p>
+<p>The planner allows students to quickly and easily visualize prospective schedules. Wellesley does not offer any way to show students their mock schedule, and because of this students often use spreadsheets and drawings in their own free time in an attempt to glimpse at what their schedule might look like. This  allows for students to simply press a button for a prospective course to show up on their planner.</p>
+<p>Coursewire provides tools even beyond the features listed above. Students can see recommendations based on what other students have taken and keep track of past courses over multiple semesters. Without a doubt, this will be a valuable resource to students and will still have opportunity to grow.</p>
+</div>
+</body>
+</html>

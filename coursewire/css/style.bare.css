@@ -1,0 +1,89 @@
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+/* alerts should be hidden by default */
+.alert {
+    display: none;
+}
+/* used in search.php */
+td {
+    vertical-align: text-top;
+}
+#search {
+    float: left;
+    width: 48%;
+}
+#search .btn {
+    margin: 10px;
+}
+#results {
+    float: right;
+    width: 48%;
+}
+.course {
+    background-color: #e9e9e9;
+    padding: 10px;
+    width: 500px;
+    height: 80px;
+    margin: 10px;
+}
+.detail h1, h2, h3 {
+    line-height: 20px; !important
+}
+.buttons {
+    float: left;
+    width: 15px;
+    height: 100%;
+    padding: 2px 6px 0 0;
+}
+.right {
+    float: right;
+    text-align: right;
+}
+/* used in settings.php */
+#settings-nav {
+    float: left;
+    width: 20%;
+    padding: 8px 0;
+}
+#settings {
+    float: left;
+    width: 70%;
+    padding: 19px 29px 10px;
+    margin: 0 auto 20px 30px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    -webkit-border-radius: 5px;
+       -moz-border-radius: 5px;
+            border-radius: 5px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+       -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+#settings input, #settings select, #settings textarea {
+    margin-bottom: 10px;
+}
+/* used in planner.php */
+#calendar {
+    width: 80%;
+    height: 700px;
+    float: right;
+    margin: 0 auto;
+    line-height: 15px !important;
+}
+#course-list {
+    width: 19%;
+    height: 700px;
+    float: left;
+}
+#shopped-courses {
+    padding: 10px;
+}
+.modal {
+    height: auto !important;
+    width: 620px !important;
+}
+.modal-body {
+    max-height: 500px !important;
+}
