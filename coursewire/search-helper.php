@@ -98,7 +98,7 @@ function checkboxes($attr,array $list) {
 function getSearchResults(array $param) {
   global $dbh;
   
-  filter_fields($param);
+  $param = filter_fields($param);
   if (isset($param['course_number'])) $param['course_number'] = format_course_number($param['course_number']);
 
   /* Remove if set to non-existent field
@@ -106,7 +106,7 @@ function getSearchResults(array $param) {
    * Remove sort_by from term parsing as it will be added at the end
   */
   $sortFields = array('term_code','subject_code','course_number','instructors','startend1');
-  
+
   if (isset($param['sort_by']) and in_array($param['sort_by'],$sortFields)) { $sort_by = $param['sort_by']; }
   else { $sort_by = 'subject_code'; }
   unset($param['sort_by']);
@@ -248,8 +248,9 @@ function filter_fields($param) {
   
   // remove empty and non-standard GET variables
   foreach ($param as $key => $value) {
-    if (empty($value) or !in_array($key,$fields)) { unset($param[$key]); }            
+    if (empty($value) or !in_array($key,$fields) or $value==null) { unset($param[$key]); }            
   }
+  return $param;
 }
 
 /*

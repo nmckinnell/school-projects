@@ -21,12 +21,12 @@ if (isset($_SESSION['user']) and !isset($_SESSION['name']) and !isset($checked))
   if ($resultset->numRows() > 0) {
     $row = $resultset->fetchRow(MDB2_FETCHMODE_ASSOC);
     // if a name is set in the database, use it in session
-    if ($row['name'] !== '') {
+    if (isset($row['name'])) {
       $_SESSION['name'] = $row['name'];
     } else { $_SESSION['name'] = $_SESSION['user']; } // otherwise use the username
     // check if any majors are set to display appropriate recommendations
-    if ($row['major1']) $_SESSION['major1'] = $row['major1'];
-    if ($row['major2']) $_SESSION['major2'] = $row['major2'];            
+    if (isset($row['major1'])) $_SESSION['major1'] = $row['major1'];
+    if (isset($row['major2'])) $_SESSION['major2'] = $row['major2'];            
   } else {
     // use username as name if no user is found in database
     $_SESSION['name'] = $_SESSION['user'];
